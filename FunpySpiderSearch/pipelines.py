@@ -71,5 +71,6 @@ class ElasticSearchPipeline(object):
     """通用的ELasticSearch存储方法"""
 
     def process_item(self, item, spider):
-        item.save_to_es()
+        # 不保存到 ES
+        # item.save_to_es()
         return item

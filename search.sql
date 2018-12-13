@@ -41,6 +41,7 @@ CREATE TABLE `jobbole_article` (
 -- ----------------------------
 DROP TABLE IF EXISTS `lagou_job`;
 CREATE TABLE `lagou_job` (
+  `id` mediumint(8) unsigned NOT NULL AUTO_INCREMENT,
   `title` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `url` varchar(300) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `url_object_id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,

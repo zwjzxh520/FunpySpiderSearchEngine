@@ -33,7 +33,7 @@ ROBOTSTXT_OBEY = False
 # CONCURRENT_REQUESTS_PER_IP = 16
 
 # Disable cookies (enabled by default)
-COOKIES_ENABLED = False
+COOKIES_ENABLED = True
 
 # Disable Telnet Console (enabled by default)
 # TELNETCONSOLE_ENABLED = False
@@ -52,9 +52,10 @@ COOKIES_ENABLED = False
 
 # Enable or disable downloader middlewares
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
-# DOWNLOADER_MIDDLEWARES = {
+DOWNLOADER_MIDDLEWARES = {
 #    'FunpySpiderSearch.middlewares.FunpyspidersearchDownloaderMiddleware': 543,
-# }
+'scrapy.downloadermiddlewares.defaultheaders.DefaultHeadersMiddleware': 400,
+}
 
 # Enable or disable extensions
 # See https://doc.scrapy.org/en/latest/topics/extensions.html
@@ -66,8 +67,8 @@ COOKIES_ENABLED = False
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
     'FunpySpiderSearch.pipelines.FunpyspidersearchPipeline': 300,
-    # 'FunpySpiderSearch.pipelines.MysqlTwistedPipeline': 400,
-    'FunpySpiderSearch.pipelines.ElasticSearchPipeline': 500,
+    'FunpySpiderSearch.pipelines.MysqlTwistedPipeline': 400,
+    # 'FunpySpiderSearch.pipelines.ElasticSearchPipeline': 500,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
