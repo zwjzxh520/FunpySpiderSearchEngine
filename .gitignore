@@ -2,6 +2,7 @@
 config.py
 FunpySpiderSearch/cookies/zhihu/*
 config.py
+documents
 
 # Windows image file caches
 Thumbs.db

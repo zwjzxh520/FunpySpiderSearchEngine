@@ -24,12 +24,11 @@ class LagouJobspider(CrawlSpider):
 
     name = 'lagou'
     allowed_domains = ['www.lagou.com']
-    start_urls = ['https://www.lagou.com']
     agent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/" \
             "537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36"
     custom_settings = {
         "COOKIES_ENABLED": True,
-        "COOKIES_DEBUG": True,
+        "COOKIES_DEBUG": False,
         "REFERER_ENABLED": False,
         "DOWNLOAD_DELAY": 5,
         'DEFAULT_REQUEST_HEADERS': {
