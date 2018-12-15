@@ -85,23 +85,23 @@ class LagouJobspider(CrawlSpider):
 
         url = "https://www.lagou.com/jobs/positionAjax.json?city="+city+"&needAddtionalResult=false"
 
-        reqUrls = []
+        req_urls = []
         
         for num in range(self.max_start_request_num):
             for kd in kds:
                 isFirst = 'true' if  num == 0 else 'false'
                 c = self.generate_cookie()
-                reqUrls.append(FormRequest(url=url,
+                req_urls.append(FormRequest(url=url,
                         formdata={'first': isFirst, 'pn': str(num+1), 'kd': kd},
                         callback=self.parse_ajaxjson,
                         cookies=c,
                         headers=headers))        
-        return reqUrls
+        return req_urls
 
     def parse_ajaxjson(self, response):
-        jsonData = response.body.decode(response.encoding)
+        json_data = response.body.decode(response.encoding)
 
-        data = json.loads(jsonData)
+        data = json.loads(json_data)
         if (data['success']) :
             for info in data['content']['positionResult']['result']:
                 yield Request(url='https://www.lagou.com/jobs/%s.html' % (info['positionId']), 

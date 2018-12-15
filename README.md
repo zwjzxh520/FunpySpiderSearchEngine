@@ -5,6 +5,8 @@ forked from https://github.com/mtianyan/FunpySpiderSearchEngine
 
 抓取的数据会自动去重
 
+去掉了写入 ElasticSearch 的步骤
+
 薪水的单位都是 *k/月*
 
 工作经验说明：
@@ -30,3 +32,11 @@ scrapy crawl w51job
 python 中 import 路径不能以数字开头，因此加了个字母 w
 
 与拉勾的数据相比，数据表中去掉了 *tags* 和 *job_type* 字段
+
+##  智联招聘网招聘信息爬虫
+命令：
+```bash
+scrapy crawl zhilian
+```
+
+与拉勾的数据相比，数据表中去掉了 *publish_time*、 *tags* 和 *job_type* 字段

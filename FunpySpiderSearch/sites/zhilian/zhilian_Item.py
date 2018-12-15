@@ -17,29 +17,19 @@ JOB_COUNT_INIT = 0
 
 JOB_DEGREE = ['高中', '中专', '大专', '本科', '研究生', '硕士', '博士', '博士后']
 
-class W51JobItemLoader(ItemLoader):
+class ZhilianItemLoader(ItemLoader):
     default_output_processor = TakeFirst()
 
-# 将空白字符替换为 ,
-def replace_space(src):
-    return re.sub('[\t\n\r]+', ',', src.strip())
-
-def get_city(str):
-    return str.strip().split('-')[0]
-
-class W51JobItem(scrapy.Item, MysqlItem, ElasticSearchItem):
+class ZhilianItem(scrapy.Item, MysqlItem, ElasticSearchItem):
     title = scrapy.Field()
     url = scrapy.Field()
     url_object_id = scrapy.Field()
     salary_min = scrapy.Field()
     salary_max = scrapy.Field()
-    job_city = scrapy.Field(
-        input_processor=Join('|'),
-    )
+    job_city = scrapy.Field()
     work_years_min = scrapy.Field()
     work_years_max = scrapy.Field()
     degree_need = scrapy.Field( )
-    publish_time = scrapy.Field()
 
     job_advantage = scrapy.Field(
         input_processor=Join(','),
@@ -54,41 +44,22 @@ class W51JobItem(scrapy.Item, MysqlItem, ElasticSearchItem):
     crawl_update_time = scrapy.Field()
 
     def clean_data(self):
-        misc_info = self['job_city'].strip().split('|')
-
-        self['job_city'] = get_city(misc_info[0].strip())
-        self['work_years_min'] = misc_info[1].strip()
-        self['degree_need'] = misc_info[2].strip()
+        self['work_years_min'] = self['work_years_min'].strip()
 
         if self['degree_need'] not in JOB_DEGREE:
             if self['degree_need'] == '初中及以下':
                 self['degree_need'] = '初中'
-            else:
-                self['degree_need'] = ''
+            # else:
+            #     self['degree_need'] = ''
 
-        if len(misc_info) > 4 and "发布" in misc_info[4]:
-            self["publish_time"] = misc_info[4].strip()
-        elif "发布" in misc_info[3]:
-            self["publish_time"] = misc_info[3].strip()
-        else:
-            self['publish_time'] = ''
-
-        try:
-            self['job_advantage'] = self['job_advantage'].strip()
-            if self['job_advantage']:
-                self['job_advantage'] = replace_space(self['job_advantage'])
-            else:
-                self['job_advantage'] = ''
-        except BaseException:
-            self['job_advantage'] = ''
-
+        self['job_advantage'] = self.parse_job_advantage(self['job_advantage'])
 
         self['job_addr'] = self['job_addr'].strip() if 'job_addr' in self else ''
 
-        match_obj1 = re.match("(\d+)-(\d+)年经验", self['work_years_min'])
+        match_obj1 = re.match("(\d+)-(\d+)年", self['work_years_min'])
         match_obj2 = re.match("应届毕业生|无工作经验", self['work_years_min'])
         match_obj3 = re.match("经验不限", self['work_years_min'])
-        match_obj4 = re.match("(\d+)年经验", self['work_years_min'])
+        match_obj4 = re.match("(\d+)年", self['work_years_min'])
 
         if match_obj1:
             self['work_years_min'] = match_obj1.group(1)
@@ -106,34 +77,29 @@ class W51JobItem(scrapy.Item, MysqlItem, ElasticSearchItem):
             self['work_years_min'] = 999
             self['work_years_max'] = 999
 
-        match_salary = re.match("([\d\.]+)-([\d\.]+)([千万])/月", self['salary_min'] if 'salary_min' in self else '')
+        match_salary = re.match("([\d\.]+)-([\d\.]+)元/月", self['salary_min'] if 'salary_min' in self else '')
         if match_salary:
-            # 如果是 万，则要 * 10
-            wan_salary = 1 if (match_salary.group(2) == "千") else 10
-            self['salary_min'] = float(match_salary.group(1)) * wan_salary
-            self['salary_max'] = float(match_salary.group(2)) * wan_salary
+            self['salary_min'] = float(match_salary.group(1)) / 1000
+            self['salary_max'] = float(match_salary.group(2)) / 1000
         else:
             self['salary_min'] = 666
             self['salary_max'] = 666
 
-        match_time3 = re.match("(\d+)-(\d+)发布", self["publish_time"])
-        if match_time3:
-            year = datetime.datetime.now().year
-            month = int(match_time3.group(1))
-            day = int(match_time3.group(2))
-            today = datetime.datetime(year, month, day)
-            self["publish_time"] = today.strftime(SQL_DATETIME_FORMAT)
-        else:
-            self["publish_time"] = datetime.datetime.now(
-            ).strftime(SQL_DATETIME_FORMAT)
         self["crawl_time"] = self["crawl_time"].strftime(SQL_DATETIME_FORMAT)
+
+    @staticmethod
+    def parse_job_advantage(text):
+        m = re.search("var JobWelfareTab = '(.*?)';", text, re.M)
+        if m:
+            return m.group(1)
+        return ''
 
     def save_to_mysql(self):
         self.clean_data()
         insert_sql = """
-                    insert into 51job_job(title, url, url_object_id, salary_min, salary_max, job_city, work_years_min, work_years_max, degree_need,
-                    publish_time, job_advantage, job_desc, job_addr, company_name, company_url, crawl_time) 
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    insert into zhilian_job(title, url, url_object_id, salary_min, salary_max, job_city, work_years_min, work_years_max, degree_need,
+                    job_advantage, job_desc, job_addr, company_name, company_url, crawl_time) 
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     ON DUPLICATE KEY UPDATE salary_min=VALUES(salary_min), salary_max=VALUES(salary_max), job_desc=VALUES(job_desc)
                 """
         sql_params = (
@@ -146,7 +112,6 @@ class W51JobItem(scrapy.Item, MysqlItem, ElasticSearchItem):
             self["work_years_min"],
             self["work_years_max"],
             self["degree_need"],
-            self["publish_time"],
             self["job_advantage"],
             self["job_desc"],
             self["job_addr"],
@@ -167,7 +132,7 @@ class W51JobItem(scrapy.Item, MysqlItem, ElasticSearchItem):
 
 
 if __name__ == '__main__':
-    W51JobItem().help_fields()
-    instance = W51JobItem()
+    ZhilianItem().help_fields()
+    instance = ZhilianItem()
     sql, params = fun_sql_insert(field_list=instance.field_list, duplicate_key_update=instance.duplicate_key_update,
                                  table_name=instance.table_name)

@@ -12,10 +12,6 @@ import urllib
 from FunpySpiderSearch.sites.w51job.w51job_Item import W51JobItem, W51JobItemLoader
 from FunpySpiderSearch.utils.common import get_md5
 
-
-def get_uuid():
-    return str(uuid.uuid4())
-
 def urlencode(str):
     return urllib.parse.quote((urllib.parse.quote(str)))
 
